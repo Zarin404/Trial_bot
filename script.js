@@ -33,7 +33,7 @@ function sendMessage() {
   appendMessage(text, "user");
   input.value = "";
 
-  fetch("https://YOUR_USERNAME-YOUR_SPACE_NAME.hf.space/run/predict", {
+  fetch("https://huggingface.co/spaces/ZarOUT/bot_backend.run/predict", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: [text] }) // HF expects input as array in "data"
