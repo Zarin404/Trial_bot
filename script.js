@@ -18,7 +18,7 @@ function appendMessage(text, sender) {
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Send message to HF API
+// Send message to HF Space backend
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
@@ -28,28 +28,27 @@ function sendMessage() {
 
   fetch("https://huggingface.co/spaces/ZarOUT/bot_backendHF/api/predict/", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ inputs: text })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: [text] }) // Correct format for Gradio Spaces
   })
-  .then(res => res.json())
-  .then(data => {
-    // HF API returns output differently than Spaces predict endpoint
-    let reply = "Sorry, no reply.";
-    if (Array.isArray(data)) {
-      reply = data[0]?.generated_text || reply;
-    }
-    appendMessage(reply, "bot");
-  })
-  .catch(err => {
-    appendMessage("Error connecting to bot.", "bot");
-    console.error(err);
-  });
+    .then(res => res.json())
+    .then(data => {
+      let reply = "Sorry, no reply.";
+      if (data?.data?.length) {
+        reply = data.data[0]; // Correctly read the response
+      }
+      appendMessage(reply, "bot");
+    })
+    .catch(err => {
+      appendMessage("Error connecting to bot.", "bot");
+      console.error(err);
+    });
 }
 
-// Button click
+// Send on button click
 sendBtn.onclick = sendMessage;
 
-// Enter key
+// Send on Enter key press
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
