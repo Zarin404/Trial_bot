@@ -9,23 +9,16 @@ toggle.onclick = () => {
   chatbox.classList.toggle("active");
 };
 
-// Append message to chat with proper alignment and spacing
+// Append message to chat
 function appendMessage(text, sender) {
   const msgDiv = document.createElement("div");
   msgDiv.className = `message ${sender}`;
   msgDiv.textContent = text;
   messages.appendChild(msgDiv);
-
-  // Add spacing between messages
-  const spacer = document.createElement("div");
-  spacer.style.height = "8px";
-  messages.appendChild(spacer);
-
-  // Auto-scroll to bottom
   messages.scrollTop = messages.scrollHeight;
 }
 
-// Send user message to HF Space backend
+// Send message to HF API
 function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
@@ -33,14 +26,19 @@ function sendMessage() {
   appendMessage(text, "user");
   input.value = "";
 
-  fetch("https://huggingface.co/spaces/ZarOUT/bot_backendHF/run/predict", {
+  fetch("https://api-inference.huggingface.co/models/ZarOUT/bot_backendHF", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: [text] }) // HF expects input as array in "data"
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ inputs: text })
   })
   .then(res => res.json())
   .then(data => {
-    appendMessage(data.data[0], "bot"); // HF returns output inside data.data array
+    // HF API returns output differently than Spaces predict endpoint
+    let reply = "Sorry, no reply.";
+    if (Array.isArray(data)) {
+      reply = data[0]?.generated_text || reply;
+    }
+    appendMessage(reply, "bot");
   })
   .catch(err => {
     appendMessage("Error connecting to bot.", "bot");
@@ -48,10 +46,10 @@ function sendMessage() {
   });
 }
 
-// Send on button click
+// Button click
 sendBtn.onclick = sendMessage;
 
-// Send on Enter key press
+// Enter key
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
