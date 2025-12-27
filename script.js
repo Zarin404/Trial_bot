@@ -26,16 +26,19 @@ function sendMessage() {
   appendMessage(text, "user");
   input.value = "";
 
-  fetch("https://huggingface.co/spaces/ZarOUT/bot_backendHF/api/predict/", {
+  fetch("https://huggingface.co/spaces/ZarOUT/bot_backendHF/ask", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: [text] }) // Correct format for Gradio Spaces
+    body: JSON.stringify({
+      message: text,
+      session_id: "web" // optional: can track sessions
+    })
   })
     .then(res => res.json())
     .then(data => {
       let reply = "Sorry, no reply.";
-      if (data?.data?.length) {
-        reply = data.data[0]; // Correctly read the response
+      if (data?.reply) {
+        reply = data.reply; // FastAPI returns { "reply": "..." }
       }
       appendMessage(reply, "bot");
     })
@@ -45,10 +48,10 @@ function sendMessage() {
     });
 }
 
-// Send on button click
+// Send message on button click
 sendBtn.onclick = sendMessage;
 
-// Send on Enter key press
+// Send message on Enter key press
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
